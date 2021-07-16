@@ -1,0 +1,19 @@
+def dilution(source, new, volume):
+    antibody = (source/new)*volume
+    diluent = volume - antibody
+    return 'For 1:{} solution: {}µl from 1:{} solution + {}µl Diluent'.format(new, antibody, source, diluent)
+   
+def serial(dilution_list, volume):
+    dilution_list.sort(reverse=True)
+    output = []
+    for i in range(len(dilution_list)):
+        output.append(dilution(dilution_list[i+1], dilution_list[i], volume*2))
+        if i==(len(dilution_list)-2):
+            break
+    output.append(dilution(1, dilution_list[-1], volume*2))
+    output.reverse()
+    for entry in output:
+        print(entry)
+        
+## use serial() with a list of your desired concentrations in a 1:... format eg. for 1:200 and 1:500 input
+## [200, 500] as the first argument. Input desired end volume (with extra allowance) as second argument.

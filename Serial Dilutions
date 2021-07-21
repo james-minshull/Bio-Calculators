@@ -1,19 +1,53 @@
-def dilution(source, new, volume):
+import math
+
+def simple_dilution(source, new, volume):
     antibody = (source/new)*volume
-    diluent = volume - antibody
-    return 'For 1:{} solution: {}µl from 1:{} solution + {}µl Diluent'.format(new, antibody, source, diluent)
-   
-def serial(dilution_list, volume):
+    diluent = math.ceil(volume) - antibody
+    dil = [int(new), int(antibody), int(diluent)]
+    return dil
+    
+ def nearest_ten(n):
+    return math.ceil(n/10)*10
+ 
+ def complex_dilution(source, new, volume, previous_ab):
+    if volume + previous_ab%10 == 0:
+        new_volume = volume + previous_ab + 10
+    else:
+        new_volume = nearest_ten(volume + previous_ab)
+    antibody = (source/new)*new_volume
+    diluent = new_volume - antibody
+    dil = [int(new), int(antibody), int(diluent)]
+    return dil
+ 
+ def sortkey(elem):
+    i = elem.split()[0]
+    return int(i)
+    
+ def serial_dil(dilution_list, volume):
+    dilution_list.append(1)
     dilution_list.sort(reverse=True)
-    output = []
-    for i in range(len(dilution_list)):
-        output.append(dilution(dilution_list[i+1], dilution_list[i], volume*2))
-        if i==(len(dilution_list)-2):
-            break
-    output.append(dilution(1, dilution_list[-1], volume*2))
-    output.reverse()
-    for entry in output:
+    dilution_table = []
+    entry = simple_dilution(dilution_list[1], dilution_list[0], volume)
+    dilution_table.append(entry)
+    i = 1
+    while i < len(dilution_list)-1:
+        entry = complex_dilution(dilution_list[i+1], dilution_list[i], volume, dilution_table[i-1][1])
+        dilution_table.append(entry)
+        i +=1
+    serial = []
+    for i in range(len(dilution_table)-1):
+        serial.append('{}\tFor 1:{} solution:\t {}µl from 1:{} {}({}){} + \t{}µl Diluent'.format(len(dilution_table)-i,dilution_table[i][0], dilution_table[i][1], dilution_table[i+1][0],'\033[1m',len(dilution_table)-i-1,'\033[0m', dilution_table[i][2]))
+    serial.append('{}\tFor 1:{} solution:\t {}µl of antibody + \t{}µl Diluent'.format(1,dilution_table[len(dilution_table)-1][0], dilution_table[len(dilution_table)-1][1], dilution_table[len(dilution_table)-1][2]))
+    serial = sorted(serial, key=sortkey)
+    for entry in serial:
         print(entry)
         
-## use serial() with a list of your desired concentrations in a 1:... format eg. for 1:200 and 1:500 input
+## use serial_dil() with a list of your desired concentrations in a 1:... format eg. for 1:200 and 1:500 input
 ## [200, 500] as the first argument. Input desired end volume (with extra allowance) as second argument.
+## eg. serial_dil([10,100,1000,2000,5000], 35) will print:
+
+##  1	For 1:10 solution:	     4µl of antibody + 	        36µl Diluent
+##  2	For 1:100 solution:	     5µl from 1:10 (1) + 	    45µl Diluent
+##  3	For 1:1000 solution:	 6µl from 1:100 (2) + 	    54µl Diluent
+##  4	For 1:2000 solution:	 25µl from 1:1000 (3) + 	25µl Diluent
+##  5	For 1:5000 solution:	 14µl from 1:2000 (4) + 	21µl Diluent
